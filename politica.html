@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Política — Portal da Transparência — Pernambuco</title>
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body data-sector="politica">
+
+<div id="site-header"></div>
+
+<div class="section-band">
+  <div class="container section-band__inner">
+    <p class="breadcrumb"><a href="index.html">Início</a> / Política</p>
+    <span class="section-band__eyebrow" aria-hidden="true"></span>
+    <h1 class="section-band__title">Política</h1>
+    <p class="section-band__desc">Dados sobre atos oficiais, gestão pública, contratos e prestação de contas do governo estadual.</p>
+  </div>
+</div>
+
+<main>
+  <div class="container">
+
+    <div class="grid-row grid-row--split">
+      <!-- bloco noticia -->
+      <article class="card">
+        <span class="noticia__figure" aria-hidden="true"></span>
+        <div class="card__body" style="padding-top:0;">
+          <span class="noticia__tag">Política</span>
+          <h2 class="noticia__headline">Título da notícia de Política</h2>
+          <p class="noticia__excerpt">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+          <p class="noticia__meta">Publicado em 00/00/0000</p>
+        </div>
+      </article>
+
+      <!-- bloco grafico -->
+      <section class="card">
+        <div class="card__header">
+          <h2 class="card__title">Gráfico de comparação</h2>
+          <button type="button" class="card__link js-toggle-grafico" aria-expanded="false" aria-controls="grafico-completo-politica">Ver dados completos</button>
+        </div>
+        <div class="card__body">
+          <div class="chart-placeholder" aria-hidden="true"></div>
+          <p class="chart-caption">Execução orçamentária por ano (dado ilustrativo).</p>
+
+          <div class="chart-expanded" id="grafico-completo-politica" hidden>
+            <div class="chart-expanded__grid">
+              <div class="chart-block">
+                <h3>Evolução anual</h3>
+                <div class="chart-placeholder chart-placeholder--large" aria-hidden="true"></div>
+              </div>
+              <div class="chart-block">
+                <h3>Distribuição por categoria</h3>
+                <div class="pie-chart" style="--p1:20;--p2:30;--p3:25;--p4:25" aria-hidden="true"></div>
+                <ul class="pie-legend">
+                  <li><span class="swatch" style="background:var(--sector)"></span>Investimento <span class="pct">20%</span></li>
+                  <li><span class="swatch" style="background:var(--navy-700)"></span>Custeio <span class="pct">30%</span></li>
+                  <li><span class="swatch" style="background:var(--gold-500)"></span>Pessoal <span class="pct">25%</span></li>
+                  <li><span class="swatch" style="background:var(--green-600)"></span>Outros <span class="pct">25%</span></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- bloco ranking -->
+    <section class="card grid-row">
+      <div class="card__header">
+        <h2 class="card__title">Ranking dos municípios em repasses recebidos</h2>
+        <a class="card__link" href="#">Ver ranking completo</a>
+      </div>
+      <div class="card__body">
+        <ol class="ranking-list">
+          <li><span class="pos">1</span><span class="mun">Recife</span><span class="val">R$ 0,00</span></li>
+          <li><span class="pos">2</span><span class="mun">Jaboatão dos Guararapes</span><span class="val">R$ 0,00</span></li>
+          <li><span class="pos">3</span><span class="mun">Olinda</span><span class="val">R$ 0,00</span></li>
+          <li><span class="pos">4</span><span class="mun">Caruaru</span><span class="val">R$ 0,00</span></li>
+          <li><span class="pos">5</span><span class="mun">Petrolina</span><span class="val">R$ 0,00</span></li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- bloco comparador -->
+    <section class="card">
+      <div class="card__header">
+        <h2 class="card__title">Comparador de municípios</h2>
+      </div>
+      <div class="comparador">
+        <div>
+          <label for="mun-a">Município A</label>
+          <select id="mun-a">
+            <option value="">Selecione</option>
+            <option>Recife</option>
+            <option>Jaboatão dos Guararapes</option>
+            <option>Olinda</option>
+            <option>Caruaru</option>
+            <option>Petrolina</option>
+          </select>
+        </div>
+        <div>
+          <label for="mun-b">Município B</label>
+          <select id="mun-b">
+            <option value="">Selecione</option>
+            <option>Recife</option>
+            <option>Jaboatão dos Guararapes</option>
+            <option>Olinda</option>
+            <option>Caruaru</option>
+            <option>Petrolina</option>
+          </select>
+        </div>
+        <button type="button">Comparar</button>
+      </div>
+      <p class="comparador__result">Selecione dois municípios para comparar.</p>
+    </section>
+
+  </div>
+</main>
+
+<div id="site-footer"></div>
+
+<script src="assets/js/layout.js"></script>
+</body>
+</html>
