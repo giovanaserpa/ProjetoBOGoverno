@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Geral — Portal de Custos e Transparência de Pernambuco</title>
+<meta name="description" content="Pernambuco inteiro pelas duas perguntas: com o que o Estado gastou, e quanto custa manter cada serviço.">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body data-sector="geral">
+
+<div id="site-header"></div>
+
+<div class="section-band">
+  <div class="container section-band__inner">
+    <p class="breadcrumb"><a href="index.html">Início</a> / Geral</p>
+    <span class="section-band__eyebrow" aria-hidden="true"></span>
+    <h1 class="section-band__title">Geral</h1>
+    <p class="section-band__desc"
+       data-desc-despesa="Pernambuco inteiro pelo lado da despesa: quanto foi fixado, empenhado e liquidado, de onde veio a receita e quais órgãos mais executam."
+       data-desc-custo="Pernambuco inteiro pelo lado do custo: quanto custa manter cada serviço por unidade entregue, de que esse custo é feito e o que ainda falta para apurá-lo.">Pernambuco inteiro pelo lado da despesa: quanto foi fixado, empenhado e liquidado, de onde veio a receita e quais órgãos mais executam.</p>
+  </div>
+</div>
+
+<main id="conteudo">
+  <div class="container">
+
+    <!-- ===== ABA DESPESA ===== -->
+    <div data-modo-bloco="despesa">
+
+      <div id="execucao-resumo"></div>
+
+      <!-- de onde vem o dinheiro -->
+      <div id="receita"></div>
+
+      <!-- para onde vai, por área -->
+      <div id="faixa-orcamento"></div>
+
+      <!-- quem executa -->
+      <section class="card grid-row" id="orgaos">
+        <div class="card__header">
+          <h2 class="card__title" data-titulo-ranking></h2>
+          <a class="card__link" href="#">Ver todos os órgãos</a>
+        </div>
+        <div class="card__body">
+          <ol class="ranking-list"></ol>
+          <p class="chart-caption" data-nota-ranking></p>
+        </div>
+      </section>
+
+      <!-- comparar dois órgãos -->
+      <section class="card">
+        <div class="card__header">
+          <h2 class="card__title" data-titulo-comparador></h2>
+        </div>
+        <div class="comparador">
+          <div>
+            <label for="mun-a" data-rotulo-a></label>
+            <select id="mun-a"></select>
+          </div>
+          <div>
+            <label for="mun-b" data-rotulo-b></label>
+            <select id="mun-b"></select>
+          </div>
+          <button type="button">Comparar</button>
+        </div>
+        <p class="comparador__result">Selecione dois para comparar.</p>
+      </section>
+    </div>
+
+    <!-- ===== ABA CUSTO ===== -->
+    <div data-modo-bloco="custo" hidden>
+
+      <!-- indicadores de custo unitário e as lacunas -->
+      <div id="custos"></div>
+
+      <!-- ranking de custo por área -->
+      <div id="ranking-custo"></div>
+    </div>
+
+    <div data-secao="Consultas sobre despesas" data-icone="orgao"></div>
+    <ul class="cartoes"></ul>
+
+  </div>
+</main>
+
+<div id="site-footer"></div>
+
+<script src="assets/js/dados.js"></script>
+<script src="assets/js/componentes.js"></script>
+<script src="assets/js/layout.js"></script>
+<script src="assets/js/assistente.js"></script>
+</body>
+</html>

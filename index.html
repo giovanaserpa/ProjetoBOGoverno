@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Portal da Transparência — Pernambuco</title>
-<meta name="description" content="Quanto o Estado de Pernambuco reservou e quanto já gastou: execução orçamentária, repartição por área e despesa por órgão.">
+<title>Portal de Custos e Transparência — Pernambuco</title>
+<meta name="description" content="Duas perguntas sobre o dinheiro de Pernambuco: com o que o Estado gastou, e quanto custa manter cada serviço. Dado oficial do E-Fisco e estimativas de custo com o método aberto.">
 <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
@@ -13,22 +13,27 @@
 
 <main id="conteudo">
 
-  <!-- quanto é, e como o dinheiro percorre o ano -->
+  <!-- quanto é o orçamento e como ele percorre o ano -->
   <div id="abertura"></div>
 
+  <!-- as duas perguntas, lado a lado, antes de qualquer tabela -->
+  <div class="container"><div id="bifurcacao"></div></div>
+
+  <!-- ================= TRILHA 1 — DESPESA ================= -->
   <div class="container">
+    <div data-trilha="despesa" id="trilha-despesa"></div>
 
-    <!-- para onde vai: a faixa comanda a leitura e o gráfico -->
-    <div id="faixa-orcamento"></div>
-
-    <!-- de onde vem o dinheiro, e quanto já entrou -->
+    <!-- de onde vem o dinheiro -->
     <div id="receita"></div>
 
-    <!-- para onde vai, por município -->
-    <section class="card grid-row" id="municipios">
+    <!-- para onde ele vai, por área -->
+    <div id="faixa-orcamento"></div>
+
+    <!-- quem executa: as principais despesas por órgão -->
+    <section class="card grid-row" id="orgaos">
       <div class="card__header">
         <h2 class="card__title" data-titulo-ranking></h2>
-        <a class="card__link" href="#">Ver os 185 municípios</a>
+        <a class="card__link" href="#">Ver todos os órgãos</a>
       </div>
       <div class="card__body">
         <ol class="ranking-list"></ol>
@@ -36,7 +41,11 @@
       </div>
     </section>
 
-    <!-- comparar dois -->
+    <!-- consultas do lado da despesa -->
+    <div data-secao="Consultas sobre despesas" data-secao-fixa data-icone="orgao"></div>
+    <ul class="cartoes" data-cartoes="despesa"></ul>
+
+    <!-- comparar dois órgãos: a frase do desafio -->
     <section class="card">
       <div class="card__header">
         <h2 class="card__title" data-titulo-comparador></h2>
@@ -54,12 +63,23 @@
       </div>
       <p class="comparador__result">Selecione dois para comparar.</p>
     </section>
-
-    <!-- navegação, no fim -->
-    <div data-secao="Consultas sobre despesas" data-icone="orgao"></div>
-    <ul class="cartoes"></ul>
-
   </div>
+
+  <!-- ================= TRILHA 2 — CUSTO ================= -->
+  <div class="container">
+    <div data-trilha="custo" id="trilha-custo"></div>
+
+    <!-- principais custos unitários e as lacunas -->
+    <div id="custos-resumo"></div>
+
+    <!-- os 185 municípios nas duas leituras -->
+    <div id="municipios"></div>
+
+    <!-- consultas do lado do custo -->
+    <div data-secao="Consultas sobre custos" data-secao-fixa data-icone="custo-area"></div>
+    <ul class="cartoes" data-cartoes="custo"></ul>
+  </div>
+
 </main>
 
 <div id="site-footer"></div>

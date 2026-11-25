@@ -15,6 +15,10 @@
   // Administração, que é o que o dado dessa página realmente é.
   var MENU = [
     { label: "Início",    href: "index.html",     chave: "inicio" },
+    // "Geral" é a visão do Estado inteiro — a mesma estrutura
+    // de duas abas das páginas de área, só que a área aqui é
+    // Pernambuco todo. Vem logo depois do Início.
+    { label: "Geral",     href: "geral.html",     chave: "geral" },
     { label: "Educação",  href: "educacao.html",  chave: "educacao" },
     { label: "Saúde",     href: "saude.html",     chave: "saude" },
     { label: "Gestão",    href: "politica.html",  chave: "politica" },
@@ -27,7 +31,8 @@
   // menor porque são atalho, não a leitura principal.
   var ATALHOS = [
     { label: "Receitas",      href: "index.html#receita" },
-    { label: "Despesas",      href: "index.html#faixa-orcamento" },
+    { label: "Despesas",      href: "index.html#trilha-despesa" },
+    { label: "Órgãos",        href: "index.html#orgaos" },
     { label: "Municípios",    href: "index.html#municipios" },
     { label: "Dados abertos", href: "index.html#rodape-dados" }
   ];
@@ -226,8 +231,9 @@
                   "estão zeradas em todos os anos</b> — só o IPVA tem valor. " +
                   "Publicamos o que está publicado, com esta ressalva.</dd>" +
             "</dl>" +
-            '<p class="site-footer__aviso">O único bloco ainda ilustrativo é o ranking por ' +
-              "órgão, marcado como tal onde aparece.</p>" +
+            '<p class="site-footer__aviso">Nenhum número deste portal é inventado. O que ' +
+              "não vem de fonte oficial é cálculo nosso, marcado como estimativa e com a " +
+              "conta aberta em 'Como calculamos'.</p>" +
           "</section>" +
 
           "<section>" +
@@ -491,7 +497,10 @@
         '<p class="faixa__sub">A largura de cada faixa é o tamanho da fatia. Toque numa área para ver os números dela aqui embaixo.</p>' +
         '<div class="faixa__trilha" role="group" aria-label="Áreas do orçamento. Escolha uma para ver os números dela.">' + fatias + "</div>" +
         '<div class="leitura" aria-live="polite"></div>' +
-        '<p class="faixa__nota">Repartição ilustrativa no protótipo. A ser substituída pela consulta de despesa por função orçamentária.</p>' +
+        '<p class="faixa__nota">Repartição real por função orçamentária, sobre a despesa ' +
+          "liquidada de " + DADOS.execucao.exercicio + ". A soma das " +
+          DADOS.funcoes.itens.length + " funções fecha com o total do painel oficial. " +
+          DADOS.execucao.fonte + " · consulta em " + DADOS.execucao.consultaEm + ".</p>" +
       "</section>";
 
     ligarFaixa();
@@ -542,7 +551,7 @@
           '<div class="leitura__item leitura__item--texto">' +
             '<p class="leitura__nota">' + item.share.toFixed(1).replace(".", ",") +
               "% do orçamento do Estado. " + contexto + "</p>" +
-            (item.pagina ? '<a class="leitura__link" href="' + item.pagina + '">Ver os dados de ' + item.nome + "</a>" : "") +
+            (item.pagina ? '<a class="leitura__link" href="' + comModo(item.pagina) + '">Ver os dados de ' + item.nome + "</a>" : "") +
           "</div>" +
         "</div>" +
         '<div class="leitura__grafico"></div>';
@@ -560,7 +569,7 @@
         cx.innerHTML = '<p class="leitura__rotulo">Evolução de ' + item.nome.toLowerCase() +
           ", " + DADOS.serie.anos[0] + "–" + DADOS.serie.anos[DADOS.serie.anos.length - 1] +
           '</p><div class="chart" data-serie="' + chave + '"></div>' +
-          '<p class="chart-caption">Índice ilustrativo no protótipo.</p>';
+          '<p class="chart-caption">Despesa liquidada em reais, dado oficial do E-Fisco.</p>';
         renderChart(cx.querySelector(".chart"));
         UI.tooltips(cx);
       }
@@ -878,6 +887,631 @@
     if (typeof UI !== "undefined" && UI.tooltips) UI.tooltips(alvo);
   }
 
+  /* ---------- a bifurcação: despesa ou custo ----------
+     Vem logo depois da abertura, antes de qualquer tabela. As
+     duas perguntas são diferentes e a maioria das pessoas não
+     sabe disso — a página precisa separar as duas antes de
+     começar a despejar número.
+  ---------------------------------------------------- */
+
+  function renderBifurcacao(alvo) {
+    if (!alvo) return;
+    var pago = DADOS.execucao.etapas[3];
+    var saude = null;
+    DADOS.areas.itens.forEach(function (a) { if (a.chave === "saude") saude = a; });
+    var porHabSaude = saude ? saude.liquidada / DADOS.populacao.valor : 0;
+
+    alvo.innerHTML =
+      '<section class="bifurcacao" aria-labelledby="bif-titulo">' +
+        '<h2 class="bifurcacao__titulo" id="bif-titulo">Duas perguntas diferentes</h2>' +
+        '<p class="bifurcacao__linha">Quase todo portal público responde só a primeira. ' +
+          "A segunda é a que falta — e é a que diz se o dinheiro está rendendo.</p>" +
+
+        '<ul class="bifurcacao__grade">' +
+          '<li><a class="porta porta--despesa" href="#trilha-despesa">' +
+            '<span class="porta__tag">Despesa</span>' +
+            '<span class="porta__pergunta">Com o que o Estado gastou?</span>' +
+            '<span class="porta__cifra">' + DADOS.moeda(pago.valor) + "</span>" +
+            '<span class="porta__un">pagos em ' + DADOS.execucao.exercicio + "</span>" +
+            '<span class="porta__texto">O dinheiro que saiu do caixa, em três fases: ' +
+              "reservado, conferido e pago. É o que o Portal da Transparência já publica, " +
+              "por órgão, fornecedor e período.</span>" +
+            '<span class="porta__ir">Ver as despesas</span>' +
+          "</a></li>" +
+
+          '<li><a class="porta porta--custo" href="#trilha-custo">' +
+            '<span class="porta__tag">Custo</span>' +
+            '<span class="porta__pergunta">Quanto custa cada serviço?</span>' +
+            '<span class="porta__cifra">R$ ' +
+              porHabSaude.toLocaleString("pt-BR", { maximumFractionDigits: 0 }) + "</span>" +
+            '<span class="porta__un">por pernambucano em saúde, por ano</span>' +
+            '<span class="porta__texto">Quanto consome manter o serviço funcionando — por ' +
+              "aluno, por habitante, por escola. Não está publicado em lugar nenhum: aqui " +
+              "é estimativa nossa, com a conta aberta.</span>" +
+            '<span class="porta__ir">Ver os custos</span>' +
+          "</a></li>" +
+        "</ul>" +
+
+        '<p class="bifurcacao__nota">A despesa é a matéria-prima do custo: é ela dividida ' +
+          "pela quantidade de serviço entregue que vira custo por unidade. " +
+          '<button type="button" class="link-inline" data-como-calculamos>Como calculamos</button></p>' +
+      "</section>";
+  }
+
+  /* ---------- trilhas ----------
+     A bifurcação deixa de ser um bloco e vira a espinha da
+     página: cada pergunta abre uma trilha, com a mesma cor e a
+     mesma etiqueta da porta que leva até ela.
+  ------------------------------ */
+
+  var TRILHAS = {
+    despesa: {
+      tag: "Despesa",
+      titulo: "Com o que o Estado gastou?",
+      linha: "De onde veio o dinheiro, para onde ele foi e quem o executou. " +
+             "Tudo aqui é dado oficial do Portal da Transparência."
+    },
+    custo: {
+      tag: "Custo",
+      titulo: "Quanto custa cada serviço?",
+      linha: "A mesma despesa, dividida pela quantidade de serviço entregue. " +
+             "Isto o Estado ainda não publica — é estimativa nossa, com a conta aberta."
+    }
+  };
+
+  function renderTrilhas() {
+    document.querySelectorAll("[data-trilha]").forEach(function (el) {
+      var t = TRILHAS[el.getAttribute("data-trilha")];
+      if (!t) return;
+      el.className = "trilha trilha--" + el.getAttribute("data-trilha");
+      el.innerHTML =
+        '<span class="trilha__tag">' + t.tag + "</span>" +
+        '<h2 class="trilha__titulo">' + t.titulo + "</h2>" +
+        '<p class="trilha__linha">' + t.linha +
+          (el.getAttribute("data-trilha") === "custo"
+            ? ' <button type="button" class="link-inline" data-como-calculamos>Como calculamos</button>'
+            : "") +
+        "</p>";
+    });
+  }
+
+  /* ---------- resumo de custos na página inicial ----------
+     Quatro indicadores e as lacunas em uma linha. O inteiro
+     fica em geral.html; aqui é só o suficiente para a pessoa
+     entender que a pergunta tem resposta.
+  --------------------------------------------------------- */
+
+  function renderCustosResumo(alvo) {
+    if (!alvo || !DADOS.custos) return;
+    var c = DADOS.custos;
+    var escolhidos = ["saude-hab", "educacao-aluno", "seguranca-hab", "previdencia-hab"];
+
+    var cards = escolhidos.map(function (chave) {
+      var ind = null;
+      c.indicadores.forEach(function (i) { if (i.chave === chave) ind = i; });
+      if (!ind) return "";
+      var area = null;
+      DADOS.areas.itens.forEach(function (a) { if (a.chave === ind.base) area = a; });
+      var den = c.denominadores[ind.por];
+      if (!area || !den) return "";
+      var v = area.liquidada / den.valor;
+
+      return '<li class="custo-mini" data-qualidade="' + den.qualidade + '">' +
+        '<p class="custo-mini__rot">' + ind.servico + "</p>" +
+        '<p class="custo-mini__valor">R$ ' +
+          v.toLocaleString("pt-BR", { maximumFractionDigits: 0 }) + "</p>" +
+        '<p class="custo-mini__un">por ' + den.unidade + " / ano</p>" +
+      "</li>";
+    }).join("");
+
+    alvo.innerHTML =
+      '<section class="card">' +
+        '<div class="card__header">' +
+          '<h2 class="card__title">O que dá para calcular hoje</h2>' +
+          '<a class="card__link" href="geral.html#custos">Ver todos os indicadores</a>' +
+        "</div>" +
+        '<ul class="custos-mini-grade">' + cards + "</ul>" +
+        '<p class="chart-caption custo-mini__nota">' +
+          "Despesa liquidada de " + DADOS.execucao.exercicio + " dividida pela quantidade " +
+          "de serviço entregue. A tarja verde marca denominador firme; a âmbar, aproximado. " +
+          '<button type="button" class="link-inline" data-como-calculamos>Como calculamos</button>' +
+        "</p>" +
+      "</section>" +
+
+      '<section class="card">' +
+        '<div class="card__header">' +
+          '<h2 class="card__title">E o que ainda não dá</h2>' +
+          '<a class="card__link" href="geral.html#custos">Ver a lista inteira</a>' +
+        "</div>" +
+        '<p class="custo-intro">Em ' + c.lacunas.length + " serviços o Estado publica " +
+          "quanto gastou, mas não publica a unidade entregue. Sem denominador não existe " +
+          "custo — existe despesa. Três exemplos:</p>" +
+        '<ul class="lacunas-mini">' +
+          c.lacunas.slice(0, 3).map(function (l) {
+            return "<li><b>" + l.servico + "</b> — falta " + l.falta +
+              '<span class="cel-sub">' + l.orgao + "</span></li>";
+          }).join("") +
+        "</ul>" +
+      "</section>";
+  }
+
+  /* ---------- como calculamos ----------
+     A metodologia em um lugar só, aberta de qualquer selo de
+     estimativa. Sem isso o número vira chute com cara de dado.
+  -------------------------------------- */
+
+  function montarComoCalculamos() {
+    document.addEventListener("click", function (ev) {
+      var b = ev.target.closest("[data-como-calculamos]");
+      if (!b || typeof UI === "undefined") return;
+      ev.preventDefault();
+
+      var c = DADOS.custos;
+      var dens = Object.keys(c.denominadores).map(function (k) {
+        var d = c.denominadores[k];
+        return "<tr><td><b>" + d.rotulo + "</b><span class=\"cel-sub\">" + d.obs + "</span></td>" +
+          '<td class="num">' + DADOS.inteiro(d.valor) + "</td>" +
+          "<td>" + (d.qualidade === "firme"
+            ? '<span class="selo-qualidade">firme</span>'
+            : '<span class="selo-qualidade selo-qualidade--aprox">aproximado</span>') +
+            '<span class="cel-sub">' + d.fonte + "</span></td></tr>";
+      }).join("");
+
+      UI.modal({
+        titulo: "Como calculamos",
+        corpo:
+          '<p class="modal__intro"><b>' + c.metodo + ".</b> " + c.aviso + "</p>" +
+
+          '<h3 class="modal__sub">A conta</h3>' +
+          '<p class="metodo-formula">custo por unidade  =  ' +
+            "<b>despesa liquidada da função</b>  ÷  <b>quantidade de serviço entregue</b></p>" +
+          "<p>Usamos a despesa <b>liquidada</b>, e não a paga, por dois motivos: é a fase em " +
+            "que o serviço já foi conferido como entregue, que é o que interessa para custo; " +
+            "e é a única coluna que fecha exatamente entre os dois painéis do Estado — na " +
+            "coluna paga eles divergem em R$ 936 milhões.</p>" +
+
+          '<h3 class="modal__sub">Os denominadores</h3>' +
+          '<div class="tabela-rolagem"><table class="modal-tabela consulta-tabela">' +
+            "<thead><tr><th>Quantidade</th><th class=\"num\">Valor</th><th>Qualidade e fonte</th></tr></thead>" +
+            "<tbody>" + dens + "</tbody></table></div>" +
+
+          '<h3 class="modal__sub">O que esta conta não é</h3>' +
+          "<p>Não é apuração de custos na <b>NBC TSP 34</b>. Custo contábil apropria " +
+            "salários, energia, material, aluguel e depreciação por objeto de custo. " +
+            "Aqui o numerador é a despesa do exercício, inteira, dividida por uma " +
+            "quantidade física. Serve para dar ordem de grandeza e comparar áreas entre " +
+            "si — não serve para prestação de contas.</p>" +
+          '<p class="modal__nota">' + c.pilotoSefaz + "</p>"
+      });
+    });
+  }
+
+  /* ---------- custos ----------
+     O desafio pede custo, não despesa. Aqui o numerador é a
+     despesa liquidada e o denominador é físico e público; a
+     qualidade de cada denominador aparece junto do número,
+     porque é ela que decide se o indicador vale ou não.
+  ----------------------------- */
+
+  function renderCustos(alvo) {
+    if (!alvo || !DADOS.custos) return;
+    var c = DADOS.custos;
+
+    var cartoes = c.indicadores.map(function (ind) {
+      var area = null;
+      DADOS.areas.itens.forEach(function (a) { if (a.chave === ind.base) area = a; });
+      var den = c.denominadores[ind.por];
+      if (!area || !den) return "";
+
+      var v = area.liquidada / den.valor;
+      // precisão conforme a ordem de grandeza: R$ 39 e R$ 7,6 mi
+      // não pedem o mesmo número de casas
+      var valor = v >= 1e6 ? DADOS.moeda(v)
+                : "R$ " + v.toLocaleString("pt-BR", { maximumFractionDigits: 0 });
+
+      return '<li class="custo-card" data-qualidade="' + den.qualidade + '">' +
+        '<p class="custo-card__pergunta">' + ind.pergunta + "</p>" +
+        '<p class="custo-card__valor">' + valor +
+          '<span class="custo-card__un">por ' + den.unidade + " / ano</span></p>" +
+        '<p class="custo-card__conta">' + DADOS.moeda(area.liquidada) + " ÷ " +
+          DADOS.inteiro(den.valor) + " " + den.rotulo + "</p>" +
+        '<p class="custo-card__fonte">' +
+          '<span class="selo-qualidade">' +
+            (den.qualidade === "firme" ? "denominador firme" : "denominador aproximado") +
+          "</span> " + den.fonte + "</p>" +
+      "</li>";
+    }).join("");
+
+    var lacunas = c.lacunas.map(function (l) {
+      return "<tr><td><b>" + l.servico + "</b><span class=\"cel-sub\">" + l.orgao + "</span></td>" +
+        "<td>" + l.falta + "<span class=\"cel-sub\">" + l.nota + "</span></td></tr>";
+    }).join("");
+
+    alvo.innerHTML =
+      '<section class="card">' +
+        '<div class="card__header">' +
+          '<h2 class="card__title">O que o Estado consegue calcular hoje</h2>' +
+          '<span class="card__selo card__selo--derivado">cálculo nosso</span>' +
+        "</div>" +
+        '<p class="custo-intro">' + c.aviso + "</p>" +
+        '<ul class="custos-grade">' + cartoes + "</ul>" +
+      "</section>" +
+
+      '<section class="card">' +
+        '<div class="card__header">' +
+          '<h2 class="card__title">O que ainda não dá para calcular</h2>' +
+        "</div>" +
+        '<p class="custo-intro">Em cada linha o Estado publica quanto gastou, mas não ' +
+          "publica a unidade de serviço entregue. Sem o denominador não existe custo — " +
+          "existe despesa. É esta lista que o portal se propõe a fechar.</p>" +
+        '<div class="tabela-rolagem"><table class="modal-tabela consulta-tabela">' +
+          "<thead><tr><th>Serviço</th><th>Falta para virar custo</th></tr></thead>" +
+          "<tbody>" + lacunas + "</tbody>" +
+        "</table></div>" +
+        '<p class="chart-caption custo-piloto">' + c.pilotoSefaz + "</p>" +
+      "</section>";
+  }
+
+  /* ---------- municípios: camada declarada de fase 2 ----------
+     O eixo principal virou órgãos, porque é o que o desafio
+     pede e porque o cliente declarou não ter autoridade sobre
+     dado de prefeitura. Os 185 municípios continuam aqui, mas
+     como extensão assumida, não como o produto.
+  ------------------------------------------------------------ */
+
+  // a frase sob os dois rankings sai do próprio dado: afirmar
+  // "nenhum aparece nos dois" seria falso — Recife aparece.
+  function viradaMunicipios(todos, porHab) {
+    var ordTotal = todos.slice().sort(function (a, b) { return b.valor - a.valor; });
+    var posTotal = {};
+    ordTotal.forEach(function (i, n) { posTotal[i.nome] = n + 1; });
+
+    // o que mais sobe ao dividir pela população
+    var maiorSalto = null;
+    porHab.forEach(function (i, n) {
+      var salto = posTotal[i.nome] - (n + 1);
+      if (!maiorSalto || salto > maiorSalto.salto) {
+        maiorSalto = { nome: i.nome, salto: salto, de: posTotal[i.nome], para: n + 1,
+                       pop: i.pop };
+      }
+    });
+
+    var nomesHab = porHab.map(function (i) { return i.nome; });
+    var repetidos = ordTotal.slice(0, 8).filter(function (i) {
+      return nomesHab.indexOf(i.nome) !== -1;
+    }).length;
+
+    var frase = repetidos
+      ? repetidos + (repetidos === 1 ? " município aparece" : " municípios aparecem") +
+        " nas duas listas; o resto troca."
+      : "Nenhum município aparece nas duas listas.";
+
+    if (maiorSalto && maiorSalto.salto > 0) {
+      frase += " " + maiorSalto.nome + ", com " + DADOS.inteiro(maiorSalto.pop) +
+        " habitantes, é o " + maiorSalto.de + "º em valor total e sobe para o " +
+        maiorSalto.para + "º por habitante.";
+    }
+    return frase;
+  }
+
+  function renderMunicipios(alvo) {
+    if (!alvo) return;
+    var conj = DADOS.conjuntos.municipios;
+
+    // Cada município carrega a posição que ocupa nas DUAS
+    // leituras, para a linha dizer onde ele está na outra.
+    var base = conj.itens.map(function (i) {
+      return { nome: i.nome, pop: i.pop, regiao: i.regiao,
+               valor: i.valor, ph: i.valor / i.pop };
+    });
+    var porTotal = base.slice().sort(function (a, b) { return b.valor - a.valor; });
+    var porHab   = base.slice().sort(function (a, b) { return b.ph - a.ph; });
+    porTotal.forEach(function (i, n) { i.posTotal = n + 1; });
+    porHab.forEach(function (i, n) { i.posHab = n + 1; });
+
+    var TOPO = 7;
+
+    function linha(i, tipo) {
+      var ehHab = tipo === "hab";
+      var max = ehHab ? porHab[0].ph : porTotal[0].valor;
+      var v = (ehHab ? i.ph : i.valor) / max;
+      return "<li style=\"--v:" + (v * 100).toFixed(1) + "\">" +
+        '<span class="pos">' + (ehHab ? i.posHab : i.posTotal) + "</span>" +
+        '<span class="mun">' + i.nome +
+          '<span class="mun__ctx">' + DADOS.inteiro(i.pop) + " hab · " + i.regiao +
+          (ehHab ? " · " + i.posTotal + "º em valor total"
+                 : " · " + i.posHab + "º por habitante") +
+          "</span></span>" +
+        '<span class="val">' +
+          (ehHab ? DADOS.porHabitante(i.valor, i.pop) : DADOS.moeda(i.valor)) +
+        "</span>" +
+      "</li>";
+    }
+
+    function coluna(tipo, tag, titulo, lista) {
+      return "<div>" +
+        '<h3 class="rank-sub"><span class="rank-sub__tag rank-sub__tag--' + tipo + '">' +
+          tag + "</span>" + titulo + "</h3>" +
+        '<ol class="ranking-list" data-fixo>' +
+          lista.slice(0, TOPO).map(function (i) { return linha(i, tipo === "custo" ? "hab" : "total"); }).join("") +
+        "</ol>" +
+        '<p class="rank-sub__ver">' +
+          '<button type="button" class="link-inline" data-ranking="' +
+            (tipo === "custo" ? "hab" : "total") + '">' +
+            "Ver ranking completo dos " + DADOS.inteiro(base.length) + "</button></p>" +
+      "</div>";
+    }
+
+    alvo.innerHTML =
+      '<section class="card">' +
+        '<div class="card__header">' +
+          '<h2 class="card__title">Municípios</h2>' +
+          '<span class="card__selo card__selo--fase2">extensão · fase 2</span>' +
+        "</div>" +
+        '<p class="custo-intro">Os ' + DADOS.inteiro(base.length) + " municípios de " +
+          "Pernambuco nas duas leituras: o que cada um recebeu do Estado, e o mesmo " +
+          "valor dividido pela população. Fica fora do escopo do MVP — o cliente " +
+          "declarou não ter autoridade sobre dado de prefeitura —, mas a base já existe.</p>" +
+
+        '<div class="dois-rankings">' +
+          coluna("despesa", "Despesa", "Por valor recebido", porTotal) +
+          coluna("custo", "Custo", "Por habitante", porHab) +
+        "</div>" +
+
+        '<p class="chart-caption">Os ' + TOPO + " primeiros de cada leitura. " +
+          viradaMunicipios(base, porHab) + " " + conj.nota + "</p>" +
+      "</section>";
+
+    alvo.querySelectorAll("[data-ranking]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        abrirMunicipios(b.getAttribute("data-ranking"));
+      });
+    });
+  }
+
+  // tabela completa dos 185, com filtro por região
+  function abrirMunicipios(ordem) {
+    var conj = DADOS.conjuntos.municipios;
+    var porHab = ordem === "hab";
+    modalTabela({
+      titulo: porHab ? "Municípios por habitante" : "Municípios por valor recebido",
+      intro: DADOS.inteiro(conj.itens.length) + " municípios, ordenados por " +
+        (porHab ? "<b>valor recebido por habitante</b>" : "<b>valor total recebido</b>") +
+        " em " + DADOS.execucao.exercicio +
+        ". Clique num cabeçalho para reordenar pela outra medida.",
+      nota: conj.nota,
+      // a coluna de ordenação muda conforme a leitura pedida
+      busca: true, numerar: true, ordenarPor: porHab ? 4 : 3,
+      placeholder: "Filtrar por município ou região...",
+      buscaEm: function (l) { return l.nome + " " + l.regiao; },
+      colunas: [
+        { rot: "Município", chave: "nome" },
+        { rot: "Região", chave: "regiao" },
+        { rot: "População", chave: "pop", num: true, fmt: DADOS.inteiro },
+        { rot: "Recebido", chave: "valor", num: true, fmt: DADOS.moeda },
+        { rot: "Por habitante", chave: "porHab", num: true,
+          fmt: function (v) { return DADOS.porHabitante(v, 1); } }
+      ],
+      linhas: conj.itens.map(function (i) {
+        return { nome: i.nome, regiao: i.regiao, pop: i.pop, valor: i.valor,
+                 porHab: i.valor / i.pop };
+      }),
+      resumo: function (v) {
+        var p = v.reduce(function (a, x) { return a + x.pop; }, 0);
+        var s = v.reduce(function (a, x) { return a + x.valor; }, 0);
+        return v.length + " municípios · " + DADOS.inteiro(p) + " habitantes · " +
+          DADOS.moeda(s) + " recebidos";
+      },
+      baixar: "municipios-pe-" + DADOS.execucao.exercicio
+    });
+  }
+
+  /* ---------- aba de custo de uma área ----------
+     A mesma área, pela outra pergunta: quanto custa manter,
+     do que esse custo é feito e o que falta para apurá-lo
+     de verdade.
+  ----------------------------------------------- */
+
+  // todos os indicadores de uma área, com o denominador de cada
+  function indicadoresDaArea(chave) {
+    if (!DADOS.custos) return [];
+    var fora = [];
+    DADOS.custos.indicadores.forEach(function (i) {
+      if (i.base !== chave) return;
+      var area = null;
+      DADOS.areas.itens.forEach(function (a) { if (a.chave === chave) area = a; });
+      var den = DADOS.custos.denominadores[i.por];
+      if (!area || !den) return;
+      fora.push({ ind: i, area: area, den: den, valor: area.liquidada / den.valor });
+    });
+    return fora;
+  }
+
+  // ranking das áreas por custo por habitante — é a comparação
+  // que o valor absoluto esconde
+  function rankingCustoAreas() {
+    return DADOS.areas.itens
+      .filter(function (a) { return a.liquidada; })
+      .map(function (a) {
+        return { nome: a.nome, chave: a.chave, valor: a.liquidada / DADOS.populacao.valor,
+                 total: a.liquidada, pagina: a.pagina };
+      })
+      .sort(function (x, y) { return y.valor - x.valor; });
+  }
+
+  function renderAreaCusto(alvo) {
+    if (!alvo) return;
+    var a = areaAtual();
+    if (!a) { alvo.remove(); return; }
+
+    var inds = indicadoresDaArea(a.chave);
+    var principal = inds[0];
+    var rank = rankingCustoAreas();
+    var pos = 0;
+    rank.forEach(function (r, i) { if (r.chave === a.chave) pos = i + 1; });
+
+    var cards = inds.map(function (x) {
+      var v = x.valor >= 1e6 ? DADOS.moeda(x.valor)
+            : "R$ " + x.valor.toLocaleString("pt-BR", { maximumFractionDigits: 0 });
+      return '<li class="custo-card" data-qualidade="' + x.den.qualidade + '">' +
+        '<p class="custo-card__pergunta">' + x.ind.pergunta + "</p>" +
+        '<p class="custo-card__valor">' + v +
+          '<span class="custo-card__un">por ' + x.den.unidade + " / ano</span></p>" +
+        '<p class="custo-card__conta">' + DADOS.moeda(x.area.liquidada) + " ÷ " +
+          DADOS.inteiro(x.den.valor) + " " + x.den.rotulo + "</p>" +
+        '<p class="custo-card__fonte"><span class="selo-qualidade' +
+          (x.den.qualidade === "firme" ? "" : " selo-qualidade--aprox") + '">' +
+          (x.den.qualidade === "firme" ? "denominador firme" : "denominador aproximado") +
+          "</span> " + x.den.fonte + "</p>" +
+      "</li>";
+    }).join("");
+
+    // composição: de que esse custo é feito
+    var comp = (a.grupos || []).map(function (g) {
+      return '<li><span class="comp__barra" style="--v:' + g.share +
+          ";--cor:" + (COR_GRUPO[g.nome] || "var(--navy-300)") + '"></span>' +
+        '<span class="comp__rot">' + g.nome + "</span>" +
+        '<span class="comp__val">' + DADOS.moeda(g.valor) + " · " +
+          String(g.share).replace(".", ",") + "%</span></li>";
+    }).join("");
+
+    var lacuna = null;
+    (DADOS.custos.lacunas || []).forEach(function (l) {
+      if (!lacuna && normalizarTexto(l.servico).indexOf(normalizarTexto(a.nome)) !== -1) lacuna = l;
+    });
+
+    alvo.innerHTML =
+      '<section class="card">' +
+        '<div class="card__header">' +
+          '<h2 class="card__title">Quanto custa manter ' + a.nome.toLowerCase() + "</h2>" +
+          '<span class="card__selo card__selo--derivado">cálculo nosso</span>' +
+        "</div>" +
+        '<p class="custo-intro">' + DADOS.custos.aviso +
+          ' <button type="button" class="link-inline" data-como-calculamos>Como calculamos</button></p>' +
+        '<ul class="custos-grade">' + cards + "</ul>" +
+      "</section>" +
+
+      '<section class="card">' +
+        '<div class="card__header">' +
+          '<h2 class="card__title">De que esse custo é feito</h2>' +
+        "</div>" +
+        '<p class="custo-intro">Grupo de natureza da despesa, sobre os ' +
+          DADOS.moeda(a.liquidada) + " liquidados em " + DADOS.execucao.exercicio + ".</p>" +
+        '<ul class="composicao">' + comp + "</ul>" +
+      "</section>" +
+
+      '<section class="card">' +
+        '<div class="card__header">' +
+          '<h2 class="card__title">Custo por habitante, área a área</h2>' +
+        "</div>" +
+        '<p class="custo-intro">' + a.nome + " é a " + pos + "ª área mais cara por " +
+          "pernambucano, entre as " + rank.length + " com página própria.</p>" +
+        '<ol class="ranking-list" data-fixo>' +
+          rank.map(function (r, i) {
+            return "<li" + (r.chave === a.chave ? ' class="ranking-list__atual"' : "") +
+              ' style="--v:' + ((r.valor / rank[0].valor) * 100).toFixed(1) + '">' +
+              '<span class="pos">' + (i + 1) + "</span>" +
+              '<span class="mun">' +
+                (r.pagina ? '<a href="' + r.pagina + '#custos">' + r.nome + "</a>" : r.nome) +
+                '<span class="mun__ctx">' + DADOS.moeda(r.total) + " no total</span></span>" +
+              '<span class="val">' + DADOS.porHabitante(r.total) + "</span>" +
+            "</li>";
+          }).join("") +
+        "</ol>" +
+        '<p class="chart-caption">Despesa liquidada dividida pelos ' +
+          DADOS.inteiro(DADOS.populacao.valor) + " habitantes do Censo 2022.</p>" +
+      "</section>" +
+
+      (lacuna
+        ? '<section class="card">' +
+            '<div class="card__header">' +
+              '<h2 class="card__title">O que falta para virar custo de verdade</h2>' +
+            "</div>" +
+            '<p class="custo-intro">Para esta área o Estado publica quanto gastou, mas ' +
+              "não publica <b>" + lacuna.falta + "</b>. " + lacuna.nota + "</p>" +
+            '<p class="chart-caption custo-piloto">' + DADOS.custos.pilotoSefaz + "</p>" +
+          "</section>"
+        : "");
+  }
+
+  /* ---------- execução do Estado, versão cartão ----------
+     O equivalente do bloco de área, mas para Pernambuco
+     inteiro: é o que a aba de despesa da página Geral abre.
+  -------------------------------------------------------- */
+
+  function renderExecucaoResumo(alvo) {
+    if (!alvo) return;
+    var e = DADOS.execucao;
+    var fix = e.etapas[0], emp = e.etapas[1], liq = e.etapas[2], pag = e.etapas[3];
+    var aLiquidar = emp.valor - liq.valor;
+
+    alvo.innerHTML =
+      '<section class="card area-resumo">' +
+        '<div class="card__header">' +
+          '<h2 class="card__title">Pernambuco em ' + e.exercicio + "</h2>" +
+          '<span class="card__selo">dado oficial</span>' +
+        "</div>" +
+
+        '<div class="area-resumo__topo">' +
+          '<div class="area-resumo__cifra">' +
+            '<p class="area-resumo__rot">Liquidado até ' + e.consultaEm + "</p>" +
+            '<p class="area-resumo__valor">' + DADOS.moeda(liq.valor) + "</p>" +
+            '<p class="area-resumo__sub">' + DADOS.pct(liq.share) + " do orçamento fixado · " +
+              DADOS.porHabitante(liq.valor) + " por pernambucano</p>" +
+          "</div>" +
+          '<dl class="area-resumo__pares">' +
+            "<div><dt>Fixado</dt><dd>" + DADOS.moeda(fix.valor) + "</dd></div>" +
+            "<div><dt>Empenhado</dt><dd>" + DADOS.moeda(emp.valor) + "</dd></div>" +
+            "<div><dt>A liquidar</dt><dd>" + DADOS.moeda(aLiquidar) + "</dd></div>" +
+            "<div><dt>Órgãos</dt><dd>" + DADOS.conjuntos.orgaos.itens.length + " com execução</dd></div>" +
+          "</dl>" +
+        "</div>" +
+
+        '<p class="area-resumo__leitura">' +
+          "O Estado arrecadou <b>" + DADOS.moeda(DADOS.receita.arrecadada) + "</b> e " +
+          "liquidou <b>" + DADOS.moeda(liq.valor) + "</b> em despesa. Entre o que foi " +
+          "<span data-termo=\"empenhado\">empenhado</span> e o que já foi " +
+          "<span data-termo=\"liquidado\">liquidado</span> há <b>" + DADOS.moeda(aLiquidar) +
+          "</b> em contratos cujo serviço ainda não foi entregue ou conferido." +
+        "</p>" +
+
+        '<p class="chart-caption">' + e.fonte + " · consulta em " + e.consultaEm + "</p>" +
+      "</section>";
+
+    if (typeof UI !== "undefined" && UI.tooltips) UI.tooltips(alvo);
+  }
+
+  /* ---------- ranking de custo por área, como cartão ---------- */
+
+  function renderRankingCusto(alvo) {
+    if (!alvo) return;
+    var rank = rankingCustoAreas();
+
+    alvo.innerHTML =
+      '<section class="card grid-row">' +
+        '<div class="card__header">' +
+          '<h2 class="card__title">Custo por habitante, área a área</h2>' +
+          '<button type="button" class="card__link" data-consulta="custo-orgao">' +
+            "Ver por órgão</button>" +
+        "</div>" +
+        '<div class="card__body">' +
+          '<ol class="ranking-list" data-fixo>' +
+            rank.map(function (r, i) {
+              return '<li style="--v:' + ((r.valor / rank[0].valor) * 100).toFixed(1) + '">' +
+                '<span class="pos">' + (i + 1) + "</span>" +
+                '<span class="mun">' +
+                  (r.pagina ? '<a href="' + r.pagina + '#custos">' + r.nome + "</a>" : r.nome) +
+                  '<span class="mun__ctx">' + DADOS.moeda(r.total) + " liquidados</span></span>" +
+                '<span class="val">' + DADOS.porHabitante(r.total) + "</span>" +
+              "</li>";
+            }).join("") +
+          "</ol>" +
+          '<p class="chart-caption">Despesa liquidada de cada área dividida pelos ' +
+            DADOS.inteiro(DADOS.populacao.valor) + " habitantes do Censo 2022.</p>" +
+        "</div>" +
+      "</section>";
+  }
+
   /* ---------- receita: de onde vem ---------- */
 
   // o portal oficial trata receita e despesa como dois assuntos
@@ -1056,6 +1690,18 @@
     return maiorHab + " recebe mais nas duas medidas — " + vezes + " vezes mais por habitante.";
   }
 
+  // leitura da comparação entre órgãos: o que interessa é o
+  // tamanho relativo e quanto cada um custa por pernambucano
+  function leituraOrgaos(na, ia, nb, ib) {
+    var pa = ia.valor / DADOS.populacao.valor;
+    var pb = ib.valor / DADOS.populacao.valor;
+    var razao = Math.max(ia.valor, ib.valor) / Math.min(ia.valor, ib.valor);
+    var maior = ia.valor >= ib.valor ? na : nb;
+    return maior + " custa " + razao.toFixed(1).replace(".", ",") + " vezes mais. " +
+      "Somados, os dois consomem " +
+      DADOS.porHabitante(ia.valor + ib.valor) + " por pernambucano por ano.";
+  }
+
   function montarComparador(card) {
     var selects = card.querySelectorAll(".comparador select");
     var botao = card.querySelector(".comparador button");
@@ -1128,6 +1774,13 @@
           extra =
             '<p class="comparacao__porhab">' + DADOS.porHabitante(it.valor, it.pop) + " por habitante</p>" +
             '<p class="comparacao__ctx">' + DADOS.inteiro(it.pop) + " hab · " + it.regiao + "</p>";
+        } else {
+          // órgão não tem população própria: a leitura de custo é
+          // sobre o Estado inteiro, que é quem paga por ele
+          extra =
+            '<p class="comparacao__porhab">' + DADOS.porHabitante(it.valor) + " por pernambucano</p>" +
+            '<p class="comparacao__ctx">' + DADOS.pct(100 * it.valor / DADOS.areas.total) +
+              " da despesa do Estado</p>";
         }
         return '<div class="comparacao__lado">' +
                  '<p class="comparacao__nome">' + nome + "</p>" +
@@ -1146,7 +1799,7 @@
         "</div>" +
         (ia.pop && ib.pop
           ? '<p class="comparacao__virada">' + viradaPorHabitante(a, ia, b, ib) + "</p>"
-          : "");
+          : '<p class="comparacao__virada">' + leituraOrgaos(a, ia, b, ib) + "</p>");
     });
   }
 
@@ -1224,10 +1877,18 @@
     credor:    '<circle cx="12" cy="8" r="3.4"/><path d="M5 20a7 7 0 0 1 14 0"/>',
     contrato:  '<path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 13h6M10 17h4"/>',
     historico: '<path d="M4 20V10M10 20V5M16 20v-8M22 20H2"/>',
-    todas:     '<path d="M12 6v12M6 12h12"/>'
+    todas:     '<path d="M12 6v12M6 12h12"/>',
+    "custo-area":   '<path d="M12 3v18M7 7h7a3 3 0 0 1 0 6H8a3 3 0 0 0 0 6h7"/>',
+    "custo-orgao":  '<path d="M4 20h16M7 20V9l5-4 5 4v11M11 20v-5h2v5"/>',
+    "custo-comp":   '<circle cx="12" cy="12" r="8.5"/><path d="M12 3.5v8.5l6 4.2"/>',
+    "custo-lacuna": '<path d="M12 4.5 2.8 20h18.4z"/><path d="M12 10v4.2M12 17.1h.01"/>',
+    "custo-metodo": '<path d="M9 3h6M10 3v5.2L4.8 18A2 2 0 0 0 6.6 21h10.8a2 2 0 0 0 1.8-3L14 8.2V3"/>'
   };
 
-  var CONSULTAS = [
+  // Dois conjuntos de cartões: um por pergunta. O modo da
+  // página decide qual aparece, e cada cartão abre direto na
+  // consulta certa.
+  var CONSULTAS_DESPESA = [
     { chave: "orgao",     rotulo: "Despesa por órgão",  cor: "educacao" },
     { chave: "credor",    rotulo: "Despesa por credor", cor: "saude" },
     { chave: "contrato",  rotulo: "Contratos vigentes", cor: "seguranca" },
@@ -1235,8 +1896,106 @@
     { chave: "todas",     rotulo: "Todas as consultas", cor: null }
   ];
 
+  var CONSULTAS_CUSTO = [
+    { chave: "custo-area",   rotulo: "Custo por área",      cor: "saude" },
+    { chave: "custo-orgao",  rotulo: "Custo por órgão",     cor: "educacao" },
+    { chave: "custo-comp",   rotulo: "Composição do custo", cor: "politica" },
+    { chave: "custo-lacuna", rotulo: "O que falta apurar",  cor: "seguranca" },
+    { chave: "custo-metodo", rotulo: "Como calculamos",     cor: null }
+  ];
+
+  function consultasDoModo() {
+    return modoAtual() === "custo" ? CONSULTAS_CUSTO : CONSULTAS_DESPESA;
+  }
+
+  /* ---------- modo: despesa ou custo ----------
+     Cada página de área tem as duas leituras. O modo vem do
+     hash, para o link de um cartão abrir já na aba certa e o
+     botão "voltar" do navegador funcionar.
+  --------------------------------------------- */
+
+  function modoAtual() {
+    var h = (window.location.hash || "").toLowerCase();
+    if (h.indexOf("custo") !== -1) return "custo";
+    return "despesa";
+  }
+
+  function aplicarModo(modo) {
+    document.body.setAttribute("data-modo", modo);
+    document.querySelectorAll("[data-modo-bloco]").forEach(function (el) {
+      var mostra = el.getAttribute("data-modo-bloco") === modo;
+      el.hidden = !mostra;
+    });
+    document.querySelectorAll("[data-ir-modo]").forEach(function (b) {
+      var destino = modo === "custo" ? "despesa" : "custo";
+      b.setAttribute("data-ir-modo", destino);
+      b.setAttribute("data-modo-destino", destino);
+      b.innerHTML = destino === "custo"
+        ? 'Ir para custos <span aria-hidden="true">→</span>'
+        : '<span aria-hidden="true">←</span> Ir para despesas';
+      b.setAttribute("aria-label", destino === "custo"
+        ? "Ir para a aba de custos desta área"
+        : "Voltar para a aba de despesas desta área");
+    });
+    // a descrição da faixa fala da pergunta da aba
+    document.querySelectorAll("[data-desc-" + modo + "]").forEach(function (el) {
+      var t = el.getAttribute("data-desc-" + modo);
+      if (t) el.textContent = t;
+    });
+
+    // os cartões de consulta trocam junto com o modo
+    document.querySelectorAll(".cartoes").forEach(renderCartoes);
+    document.querySelectorAll("[data-secao]:not([data-secao-fixa])").forEach(function (el) {
+      el.setAttribute("data-secao", modo === "custo"
+        ? "Consultas sobre custos" : "Consultas sobre despesas");
+    });
+    renderSecoes();
+  }
+
+  function montarModo() {
+    if (!document.querySelector("[data-modo-bloco]")) return;
+
+    // botão no canto superior direito da faixa da seção
+    var faixa = document.querySelector(".section-band__inner");
+    if (faixa && !faixa.querySelector("[data-ir-modo]")) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "troca-modo";
+      b.setAttribute("data-ir-modo", "custo");
+      faixa.appendChild(b);
+    }
+
+    aplicarModo(modoAtual());
+
+    document.addEventListener("click", function (ev) {
+      var b = ev.target.closest("[data-ir-modo]");
+      if (!b) return;
+      ev.preventDefault();
+      var destino = b.getAttribute("data-modo-destino") || "custo";
+      // grava no hash para o link ser compartilhável
+      history.replaceState(null, "", destino === "custo" ? "#custos" : "#despesas");
+      aplicarModo(destino);
+      var topo = document.getElementById("conteudo");
+      if (topo) topo.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+
+    window.addEventListener("hashchange", function () { aplicarModo(modoAtual()); });
+  }
+
+  // um link para página de área leva à aba em que a pessoa está
+  function comModo(href) {
+    if (!href || href.indexOf("#") !== -1) return href;
+    return modoAtual() === "custo" ? href + "#custos" : href;
+  }
+
   function renderCartoes(lista) {
-    lista.innerHTML = CONSULTAS.map(function (c) {
+    // data-cartoes fixa o conjunto; sem ele, segue o modo da
+    // página. A inicial mostra os dois, um em cada trilha.
+    var fixo = lista.getAttribute("data-cartoes");
+    var conjunto = fixo === "custo" ? CONSULTAS_CUSTO
+                 : fixo === "despesa" ? CONSULTAS_DESPESA
+                 : consultasDoModo();
+    lista.innerHTML = conjunto.map(function (c) {
       var cor = c.cor ? ' style="--cor:var(--cor-' + c.cor + ')"' : "";
       var mod = c.cor ? "" : " cartao--todas";
       return "<li>" +
@@ -1376,6 +2135,120 @@
   function abrirConsulta(chave) {
     var ex = DADOS.execucao.exercicio;
     var fonte = DADOS.execucao.fonte + " · consulta em " + DADOS.execucao.consultaEm + ".";
+    var c = DADOS.custos;
+
+    /* ----- consultas do lado do custo ----- */
+
+    if (chave === "custo-area") {
+      var rank = rankingCustoAreas();
+      modalTabela({
+        titulo: "Custo por área",
+        intro: "As " + rank.length + " áreas com página própria, pelo custo por " +
+          "pernambucano. É a comparação que o valor absoluto esconde.",
+        nota: "Despesa liquidada ÷ " + DADOS.inteiro(DADOS.populacao.valor) +
+          " habitantes (IBGE, Censo 2022). " + fonte,
+        busca: false, numerar: true, ordenarPor: 2,
+        colunas: [
+          { rot: "Área", chave: "nome" },
+          { rot: "Liquidado", chave: "total", num: true, fmt: DADOS.moeda },
+          { rot: "Por habitante", chave: "valor", num: true,
+            fmt: function (v) { return DADOS.porHabitante(v, 1); } }
+        ],
+        linhas: rank,
+        resumo: function (v) {
+          var s = v.reduce(function (a, x) { return a + x.total; }, 0);
+          return v.length + " áreas · " + DADOS.porHabitante(s) + " por pernambucano somadas";
+        },
+        baixar: "custo-por-area-pe-" + ex
+      });
+      return;
+    }
+
+    if (chave === "custo-orgao") {
+      var org = DADOS.conjuntos.orgaos;
+      modalTabela({
+        titulo: "Custo por órgão",
+        intro: "Os " + org.itens.length + " órgãos, pelo que cada um custa por " +
+          "pernambucano em " + ex + ".",
+        nota: "Despesa liquidada ÷ população do Censo 2022. " + fonte,
+        busca: true, numerar: true, ordenarPor: 2,
+        placeholder: "Filtrar por órgão...",
+        buscaEm: function (l) { return l.nome; },
+        colunas: [
+          { rot: "Órgão", chave: "nome" },
+          { rot: "Liquidado", chave: "valor", num: true, fmt: DADOS.moeda },
+          { rot: "Por habitante", chave: "porHab", num: true,
+            fmt: function (v) { return DADOS.porHabitante(v, 1); } }
+        ],
+        linhas: org.itens.map(function (o) {
+          return { nome: o.nome, valor: o.valor, porHab: o.valor / DADOS.populacao.valor };
+        }),
+        resumo: function (v) {
+          var s = v.reduce(function (a, x) { return a + x.valor; }, 0);
+          return v.length + " órgãos · " + DADOS.porHabitante(s) + " por pernambucano";
+        },
+        baixar: "custo-por-orgao-pe-" + ex
+      });
+      return;
+    }
+
+    if (chave === "custo-comp") {
+      var linhas = [];
+      DADOS.areas.itens.forEach(function (a) {
+        if (!a.grupos) return;
+        a.grupos.forEach(function (g) {
+          linhas.push({ area: a.nome, grupo: g.nome, valor: g.valor, share: g.share });
+        });
+      });
+      modalTabela({
+        titulo: "Composição do custo",
+        intro: "De que é feito o custo de cada área: pessoal, custeio, investimento. " +
+          "É o que separa uma política que paga folha de uma que contrata serviço.",
+        nota: "Grupo de natureza da despesa, sobre o liquidado de " + ex + ". " + fonte,
+        busca: true, ordenarPor: 2,
+        placeholder: "Filtrar por área ou natureza...",
+        buscaEm: function (l) { return l.area + " " + l.grupo; },
+        colunas: [
+          { rot: "Área", chave: "area" },
+          { rot: "Natureza", chave: "grupo" },
+          { rot: "Valor", chave: "valor", num: true, fmt: DADOS.moeda },
+          { rot: "% da área", chave: "share", num: true,
+            fmt: function (v) { return String(v).replace(".", ",") + "%"; } }
+        ],
+        linhas: linhas,
+        resumo: function (v) { return v.length + " linhas"; },
+        baixar: "composicao-custo-pe-" + ex
+      });
+      return;
+    }
+
+    if (chave === "custo-lacuna") {
+      modalTabela({
+        titulo: "O que falta apurar",
+        intro: "Onde o Estado publica quanto gastou mas não publica a unidade de " +
+          "serviço entregue. Sem denominador não existe custo — existe despesa.",
+        nota: c.pilotoSefaz,
+        busca: false,
+        colunas: [
+          { rot: "Serviço", chave: "servico",
+            fmt: function (v, l) { return "<b>" + v + "</b><span class=\"cel-sub\">" + l.orgao + "</span>"; } },
+          { rot: "Falta", chave: "falta",
+            fmt: function (v, l) { return v + '<span class="cel-sub">' + l.nota + "</span>"; } }
+        ],
+        linhas: c.lacunas,
+        resumo: function (v) { return v.length + " serviços sem denominador público"; }
+      });
+      return;
+    }
+
+    if (chave === "custo-metodo") {
+      var b = document.createElement("button");
+      b.setAttribute("data-como-calculamos", "");
+      document.body.appendChild(b);
+      b.click();
+      b.remove();
+      return;
+    }
 
     if (chave === "orgao") {
       var org = DADOS.conjuntos.orgaos;
@@ -1556,7 +2429,15 @@
     });
 
     renderReceita(document.getElementById("receita"));
+    renderBifurcacao(document.getElementById("bifurcacao"));
+    renderTrilhas();
+    renderCustosResumo(document.getElementById("custos-resumo"));
+    renderExecucaoResumo(document.getElementById("execucao-resumo"));
+    renderRankingCusto(document.getElementById("ranking-custo"));
+    renderCustos(document.getElementById("custos"));
+    renderMunicipios(document.getElementById("municipios"));
     renderAreaResumo(document.getElementById("area-resumo"));
+    renderAreaCusto(document.getElementById("area-custo"));
 
     // troca a pizza fixa do HTML pela repartição real por grupo
     // de natureza da despesa, e escreve as legendas que estavam
@@ -1605,13 +2486,15 @@
     document.querySelectorAll(".cartoes").forEach(renderCartoes);
     renderAcessibilidade();
 
-    document.querySelectorAll(".ranking-list").forEach(renderRanking);
+    document.querySelectorAll(".ranking-list:not([data-fixo])").forEach(renderRanking);
     document.querySelectorAll(".card").forEach(montarComparador);
     document.querySelectorAll(".js-toggle-grafico").forEach(montarToggle);
 
     UI.tooltips();
 
     montarDownloads();
+    montarComoCalculamos();
+    montarModo();
 
     animarEntrada();
   }

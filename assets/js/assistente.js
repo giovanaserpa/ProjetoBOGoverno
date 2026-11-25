@@ -57,9 +57,6 @@
     });
   }
 
-  var AVISO_ILUSTRATIVO =
-    "Atenção: este número ainda é ilustrativo no protótipo, não é dado oficial.";
-
   // selo de procedência para os blocos que passaram a ser reais
   var FONTE_OFICIAL =
     "Fonte: Portal da Transparência de PE (painéis do E-Fisco), consulta em " +
@@ -412,8 +409,12 @@
           "Transferência por município: painel estadual de transferências. Nesse painel as " +
           "colunas de ICMS e IPI estão zeradas em todos os anos de 2008 a 2026 — só o IPVA " +
           "tem valor. Mantenho o número como o Estado publica e aviso disso junto.\n\n" +
-          "O único bloco ainda ilustrativo é o ranking por órgão, que está marcado como tal. " +
-          "Nada aqui é apresentado como oficial sem ser.";
+          "Despesa por órgão e por credor: agreguei os 244.459 empenhos do ano; as somas " +
+          "fecham com os painéis oficiais.\n\n" +
+          "Os indicadores de custo são cálculo nosso — despesa liquidada dividida por " +
+          "quantidade de serviço — e aparecem marcados como estimativa, com o método " +
+          "aberto. Nenhum número aqui é inventado, e nada é apresentado como oficial " +
+          "sem ser.";
       }
     },
     {

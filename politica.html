@@ -16,75 +16,83 @@
     <p class="breadcrumb"><a href="index.html">Início</a> / Gestão</p>
     <span class="section-band__eyebrow" aria-hidden="true"></span>
     <h1 class="section-band__title">Gestão</h1>
-    <p class="section-band__desc">Quanto o Estado liquidou na função 04 — Administração: a máquina pública, sua repartição por natureza da despesa e a série desde 2008.</p>
+    <p class="section-band__desc" data-desc-despesa="Quanto o Estado liquidou na função 04 — Administração: a máquina pública, sua repartição por natureza da despesa e a série desde 2008." data-desc-custo="Quanto custa manter a máquina administrativa por pernambucano, de que esse custo é feito e o que ainda falta para apurá-lo de verdade.">Quanto o Estado liquidou na função 04 — Administração: a máquina pública, sua repartição por natureza da despesa e a série desde 2008.</p>
   </div>
 </div>
 
 <main id="conteudo">
   <div class="container">
 
-    <!-- os números da área, montados de dados.js -->
-    <div id="area-resumo"></div>
+    <!-- ===== ABA DESPESA ===== -->
+    <div data-modo-bloco="despesa">
 
-    <div class="grid-row">
-      <section class="card">
-        <div class="card__header">
-          <h2 class="card__title">Como evoluiu, e em que é gasto</h2>
-          <button type="button" class="card__link js-toggle-grafico" aria-expanded="false" aria-controls="grafico-completo-politica">Ver dados completos</button>
-        </div>
-        <div class="card__body">
-          <div class="chart" data-serie="politica"></div>
-          <p class="chart-caption" data-legenda-serie></p>
+      <div id="area-resumo"></div>
 
-          <div class="chart-expanded" id="grafico-completo-politica" hidden>
-            <div class="chart-expanded__grid">
-              <div class="chart-block">
-                <h3>Evolução anual</h3>
-                <div class="chart chart--large" data-serie="politica"></div>
-                <p class="chart-caption" data-legenda-serie></p>
-              </div>
-              <div class="chart-block">
-                <h3>Por natureza da despesa</h3>
-                <div data-pizza></div>
-                <p class="chart-caption">Grupo de natureza da despesa, sobre o valor liquidado de 2026.</p>
+      <div class="grid-row">
+        <section class="card">
+          <div class="card__header">
+            <h2 class="card__title">Como evoluiu, e em que é gasto</h2>
+            <button type="button" class="card__link js-toggle-grafico" aria-expanded="false" aria-controls="grafico-completo-politica">Ver dados completos</button>
+          </div>
+          <div class="card__body">
+            <div class="chart" data-serie="politica"></div>
+            <p class="chart-caption" data-legenda-serie></p>
+
+            <div class="chart-expanded" id="grafico-completo-politica" hidden>
+              <div class="chart-expanded__grid">
+                <div class="chart-block">
+                  <h3>Evolução anual</h3>
+                  <div class="chart chart--large" data-serie="politica"></div>
+                  <p class="chart-caption" data-legenda-serie></p>
+                </div>
+                <div class="chart-block">
+                  <h3>Por natureza da despesa</h3>
+                  <div data-pizza></div>
+                  <p class="chart-caption">Grupo de natureza da despesa, sobre o valor liquidado de 2026.</p>
+                </div>
               </div>
             </div>
           </div>
+        </section>
+      </div>
+
+      <section class="card grid-row" id="orgaos">
+        <div class="card__header">
+          <h2 class="card__title" data-titulo-ranking></h2>
+          <a class="card__link" href="#">Ver todos os órgãos</a>
+        </div>
+        <div class="card__body">
+          <ol class="ranking-list"></ol>
+          <p class="chart-caption" data-nota-ranking></p>
         </div>
       </section>
+
+      <section class="card">
+        <div class="card__header">
+          <h2 class="card__title" data-titulo-comparador></h2>
+        </div>
+        <div class="comparador">
+          <div>
+            <label for="mun-a" data-rotulo-a></label>
+            <select id="mun-a"></select>
+          </div>
+          <div>
+            <label for="mun-b" data-rotulo-b></label>
+            <select id="mun-b"></select>
+          </div>
+          <button type="button">Comparar</button>
+        </div>
+        <p class="comparador__result">Selecione dois para comparar.</p>
+      </section>
+    </div>
+
+    <!-- ===== ABA CUSTO ===== -->
+    <div data-modo-bloco="custo" hidden>
+      <div id="area-custo"></div>
     </div>
 
     <div data-secao="Consultas sobre despesas" data-icone="orgao"></div>
     <ul class="cartoes"></ul>
-
-    <section class="card grid-row" id="municipios">
-      <div class="card__header">
-        <h2 class="card__title" data-titulo-ranking></h2>
-        <a class="card__link" href="#">Ver os 185 municípios</a>
-      </div>
-      <div class="card__body">
-        <ol class="ranking-list"></ol>
-        <p class="chart-caption" data-nota-ranking></p>
-      </div>
-    </section>
-
-    <section class="card">
-      <div class="card__header">
-        <h2 class="card__title" data-titulo-comparador></h2>
-      </div>
-      <div class="comparador">
-        <div>
-          <label for="mun-a" data-rotulo-a></label>
-          <select id="mun-a"></select>
-        </div>
-        <div>
-          <label for="mun-b" data-rotulo-b></label>
-          <select id="mun-b"></select>
-        </div>
-        <button type="button">Comparar</button>
-      </div>
-      <p class="comparador__result">Selecione dois para comparar.</p>
-    </section>
 
   </div>
 </main>

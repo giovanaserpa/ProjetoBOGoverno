@@ -536,15 +536,127 @@ var DADOS = (function () {
     ]
   };
 
+  /* --- CUSTOS -------------------------------------------------
+     O desafio da SEFAZ pede CUSTO, não despesa. São coisas
+     diferentes: despesa é o que saiu do caixa; custo é o que
+     consome manter um serviço funcionando. O cliente foi
+     explícito de que a despesa paga já está publicada.
+
+     Custo de verdade, na NBC TSP 34, exige apropriação por
+     objeto de custo e volume de serviço entregue. A SEFAZ está
+     montando essa apuração agora, pela Gerência de Custos da
+     Contadoria em parceria com a Fipe, com piloto na SEAP e no
+     Hospital dos Servidores (IASSEPE) — ou seja, o dado de
+     custo ainda NÃO existe publicado, para ninguém.
+
+     O que dá para fazer hoje, e é o que está aqui: custo-caixa
+     por unidade de serviço — despesa liquidada dividida por um
+     denominador físico público. É uma aproximação, e cada
+     indicador carrega a qualidade do denominador que usou.
+     Quando a apuração da SEFAZ sair, troca-se o numerador e a
+     estrutura continua a mesma.
+  ------------------------------------------------------------ */
+
+  // Denominadores: cada um com fonte, data e qualidade. É o
+  // ponto frágil da conta, então fica à vista em vez de
+  // embutido na fórmula.
+  var denominadores = {
+    populacao: {
+      rotulo: "habitantes de Pernambuco",
+      valor: 9058931,
+      unidade: "habitante",
+      fonte: "IBGE · Censo Demográfico 2022",
+      ano: 2022,
+      qualidade: "firme",
+      obs: "Somado dos 185 municípios."
+    },
+    alunosRedeEstadual: {
+      rotulo: "estudantes da rede estadual",
+      valor: 500000,
+      unidade: "aluno",
+      fonte: "Censo Escolar 2025 (INEP), via CONSED e Secretaria de Educação de PE",
+      ano: 2025,
+      qualidade: "aproximado",
+      obs: "A própria divulgação oficial diz 'cerca de 500 mil', somando ensino regular, educação especial e EJA. Fica como aproximado até a squad baixar a Sinopse Estatística do INEP, que traz o número fechado. Trocar aqui é um campo só."
+    },
+    escolasRedeEstadual: {
+      rotulo: "unidades da rede estadual",
+      valor: 1082,
+      unidade: "escola",
+      fonte: "Censo Escolar 2025 (INEP), via CONSED e Secretaria de Educação de PE",
+      ano: 2025,
+      qualidade: "aproximado",
+      obs: "1.082 unidades, das quais 682 de tempo integral. A divulgação não especifica se todas são escolas."
+    }
+  };
+
+  // Indicadores de custo unitário. "base" é a chave da área em
+  // areas.itens; "por" é a chave do denominador.
+  var indicadoresCusto = [
+    { chave: "saude-hab",      servico: "Saúde",            base: "saude",       por: "populacao",
+      pergunta: "Quanto custa manter a saúde estadual, por pernambucano?" },
+    { chave: "educacao-aluno", servico: "Educação",         base: "educacao",    por: "alunosRedeEstadual",
+      pergunta: "Quanto custa manter um estudante da rede estadual por ano?" },
+    { chave: "educacao-escola",servico: "Educação",         base: "educacao",    por: "escolasRedeEstadual",
+      pergunta: "Quanto custa manter uma escola estadual por ano?" },
+    { chave: "seguranca-hab",  servico: "Segurança",        base: "seguranca",   por: "populacao",
+      pergunta: "Quanto custa a segurança pública, por pernambucano?" },
+    { chave: "previdencia-hab",servico: "Previdência",      base: "previdencia", por: "populacao",
+      pergunta: "Quanto pesa a previdência do Estado, por pernambucano?" },
+    { chave: "cultura-hab",    servico: "Cultura",          base: "cultura",     por: "populacao",
+      pergunta: "Quanto custa a política cultural, por pernambucano?" },
+    { chave: "gestao-hab",     servico: "Gestão",           base: "politica",    por: "populacao",
+      pergunta: "Quanto custa a máquina administrativa, por pernambucano?" }
+  ];
+
+  // O que o Estado ainda não permite calcular, e por quê. Esta
+  // lista É parte do produto: é o diagnóstico que o desafio pede.
+  var lacunasCusto = [
+    { servico: "Sistema prisional",
+      orgao: "SEAP — R$ 540,3 mi liquidados em 2026",
+      falta: "população privada de liberdade",
+      nota: "A SEAP é um dos dois órgãos do piloto de custos da própria SEFAZ." },
+    { servico: "Saúde do servidor",
+      orgao: "IASSEPE — R$ 942,5 mi liquidados em 2026",
+      falta: "número de beneficiários e de atendimentos",
+      nota: "O Hospital dos Servidores é o outro órgão do piloto da SEFAZ." },
+    { servico: "Saúde pública",
+      orgao: "Secretaria de Saúde — R$ 9,00 bi liquidados",
+      falta: "leitos, internações e atendimentos por unidade",
+      nota: "Existe no CNES/DATASUS, mas não ligado ao dado orçamentário do Estado." },
+    { servico: "Rodovias",
+      orgao: "DER-PE — R$ 1,09 bi liquidados",
+      falta: "quilômetros de malha conservada",
+      nota: "Sem isso não há custo por quilômetro." },
+    { servico: "Educação",
+      orgao: "Secretaria de Educação — R$ 7,63 bi liquidados",
+      falta: "matrículas oficiais do Censo Escolar",
+      nota: "Usamos um número de imprensa; o oficial do INEP deixaria o indicador firme." }
+  ];
+
+  var custos = {
+    origem: "derivado",
+    exercicio: 2026,
+    metodo: "custo-caixa por unidade de serviço",
+    aviso: "Aproximação, não apuração de custos na NBC TSP 34. O numerador é a despesa liquidada; o denominador é físico e público. Cada indicador mostra a qualidade do denominador que usou.",
+    pilotoSefaz: "A SEFAZ-PE está desenvolvendo a apuração de custos pela Gerência de Custos da Contadoria, em parceria com a Fipe, com piloto na SEAP e no Hospital dos Servidores (IASSEPE). Notícia de 13/11/2026.",
+    denominadores: denominadores,
+    indicadores: indicadoresCusto,
+    lacunas: lacunasCusto
+  };
+
   /* --- Ranking e comparador ----------------------------------
      ESCOPO escolhe o que o ranking e o comparador mostram.
-     "municipios" usa dado REAL (transferência estadual por
-     município). "orgaos" segue ilustrativo — o portal não
-     publica despesa por órgão num painel consultável desta
-     forma, então aquele conjunto é exemplo, e está marcado.
-     Trocar a palavra abaixo troca tudo.
+     "orgaos" é o padrão porque é o que o desafio da SEFAZ pede
+     — comparação entre órgãos e períodos — e porque o cliente
+     declarou não ter autoridade sobre dado de prefeitura.
+     Os dois conjuntos são REAIS: os 71 órgãos saíram do painel
+     de Despesas Detalhadas e sua soma fecha com o total
+     oficial; os 185 municípios continuam disponíveis e
+     aparecem em custos.html como extensão de fase 2.
+     Trocar a palavra abaixo troca o eixo do site inteiro.
   ------------------------------------------------------------ */
-  var ESCOPO = "municipios";
+  var ESCOPO = "orgaos";
 
   var conjuntos = {
     municipios: {
@@ -712,6 +824,7 @@ var DADOS = (function () {
     serie: serie,
     areas: areas,
     funcoes: funcoes,
+    custos: custos,
     credores: credores,
     municipios: municipios,
     regioes: regioes,

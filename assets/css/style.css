@@ -100,6 +100,9 @@ body[data-sector="saude"]     { --sector:var(--cor-saude);     --sector-texto:va
 body[data-sector="politica"]  { --sector:var(--cor-politica);  --sector-texto:var(--txt-politica);  --sector-tint:#ECECF1; }
 body[data-sector="cultura"]   { --sector:var(--cor-cultura);   --sector-texto:var(--txt-cultura);   --sector-tint:#FBF0E2; }
 body[data-sector="seguranca"] { --sector:var(--cor-seguranca); --sector-texto:var(--txt-seguranca); --sector-tint:#E9EFEB; }
+/* Geral usa o azul institucional: é a visão do Estado inteiro,
+   não uma área temática como as outras */
+body[data-sector="geral"]     { --sector:var(--navy-700);     --sector-texto:var(--navy-700);      --sector-tint:#E4EDF6; }
 
 *{ box-sizing:border-box; }
 html{ scroll-behavior:smooth; }
@@ -2855,3 +2858,531 @@ body[data-sector] .site-nav__list a[aria-current="page"]{
 /* valores não quebram linha: "R$ 880,8 mi" virava duas linhas */
 .consulta-tabela td.num{ white-space:nowrap; }
 .consulta-tabela td:first-child{ min-width:16em; }
+
+/* ============================================================
+   CUSTOS
+   A seção que responde o pedido do desafio. Cada indicador
+   mostra a conta e a qualidade do denominador, porque é o
+   denominador que decide se o número vale.
+   ============================================================ */
+
+.custo-intro{
+  margin:0;
+  padding:0 var(--s5) var(--s4);
+  font-size:var(--fs-body);
+  line-height:1.6;
+  color:var(--text);
+  max-width:72ch;
+}
+
+.custos-grade{
+  list-style:none;
+  margin:0;
+  padding:0 var(--s5) var(--s5);
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(255px, 1fr));
+  gap:var(--s4);
+}
+.custo-card{
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:var(--s4);
+  background:var(--surface);
+  display:flex;
+  flex-direction:column;
+  gap:var(--s2);
+  min-width:0;
+}
+/* a barra lateral diz, antes de ler, se o número é firme */
+.custo-card{ border-left:3px solid var(--green-600); }
+.custo-card[data-qualidade="aproximado"]{ border-left-color:var(--gold-500); }
+
+.custo-card__pergunta{
+  margin:0;
+  font-size:var(--fs-sm);
+  font-weight:600;
+  color:var(--text);
+  line-height:1.4;
+}
+.custo-card__valor{
+  margin:0;
+  font-family:var(--font-display);
+  font-size:var(--fs-h2);
+  font-weight:700;
+  letter-spacing:-.01em;
+  color:var(--sector-texto);
+  font-variant-numeric:tabular-nums;
+  line-height:1.1;
+}
+.custo-card__un{
+  display:block;
+  font-family:var(--font-ui);
+  font-size:var(--fs-xs);
+  font-weight:500;
+  color:var(--text-muted);
+  letter-spacing:0;
+  margin-top:3px;
+}
+.custo-card__conta{
+  margin:0;
+  font-size:var(--fs-xs);
+  color:var(--text-muted);
+  font-variant-numeric:tabular-nums;
+  line-height:1.45;
+  padding-top:var(--s2);
+  border-top:1px dashed var(--line);
+}
+.custo-card__fonte{
+  margin:0;
+  font-size:var(--fs-xs);
+  color:var(--text-muted);
+  line-height:1.45;
+}
+.selo-qualidade{
+  display:inline-block;
+  font-weight:600;
+  color:var(--green-600);
+}
+.custo-card[data-qualidade="aproximado"] .selo-qualidade{ color:var(--txt-cultura); }
+
+.card__selo--derivado{ color:var(--navy-700); }
+.card__selo--fase2{ color:var(--text-muted); }
+
+.custo-piloto{
+  padding:var(--s4) var(--s5) var(--s5) !important;
+  margin:0 !important;
+  border-top:1px solid var(--line);
+  max-width:80ch;
+  line-height:1.55;
+}
+
+@media (max-width:620px){
+  .custo-intro, .custos-grade{ padding-left:var(--s4); padding-right:var(--s4); }
+}
+
+/* ============================================================
+   BIFURCAÇÃO — despesa ou custo
+   As duas perguntas lado a lado, antes de qualquer tabela.
+   A da esquerda o Estado já responde; a da direita, não.
+   ============================================================ */
+
+.bifurcacao{ margin:var(--s6) 0 var(--s5); }
+.bifurcacao__titulo{
+  margin:0;
+  font-family:var(--font-display);
+  font-size:var(--fs-h2);
+  font-weight:600;
+  letter-spacing:-.01em;
+  color:var(--text);
+}
+.bifurcacao__linha{
+  margin:var(--s2) 0 var(--s4);
+  font-size:var(--fs-body);
+  color:var(--text-muted);
+  line-height:1.55;
+  max-width:68ch;
+}
+
+.bifurcacao__grade{
+  list-style:none;
+  margin:0; padding:0;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:var(--s4);
+}
+.bifurcacao__grade li{ display:flex; }
+
+.porta{
+  display:flex;
+  flex-direction:column;
+  gap:var(--s2);
+  width:100%;
+  padding:var(--s5);
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-top:4px solid var(--porta-cor, var(--navy-500));
+  border-radius:var(--radius);
+  color:var(--text);
+  transition:border-color .15s var(--ease), box-shadow .15s var(--ease),
+             transform .15s var(--ease);
+}
+.porta:hover{
+  text-decoration:none;
+  border-color:var(--porta-cor, var(--navy-500));
+  border-top-color:var(--porta-cor, var(--navy-500));
+  box-shadow:var(--shadow-raised);
+  transform:translateY(-2px);
+}
+.porta:focus-visible{ outline:2px solid var(--azul-acao); outline-offset:2px; }
+@media (prefers-reduced-motion:reduce){
+  .porta, .porta:hover{ transform:none; transition:none; }
+}
+
+/* despesa: o azul do portal, porque é o que já existe lá.
+   custo: o verde, porque é o que este projeto acrescenta. */
+.porta--despesa{ --porta-cor:var(--navy-500); }
+.porta--custo{   --porta-cor:var(--green-600); }
+
+.porta__tag{
+  align-self:flex-start;
+  font-size:var(--fs-xs);
+  font-weight:700;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  color:var(--porta-cor);
+  border:1px solid currentColor;
+  border-radius:999px;
+  padding:2px 10px;
+}
+.porta__pergunta{
+  font-family:var(--font-display);
+  font-size:var(--fs-h3);
+  font-weight:600;
+  color:var(--text);
+  line-height:1.3;
+}
+.porta__cifra{
+  font-family:var(--font-display);
+  font-size:var(--fs-display);
+  font-weight:700;
+  letter-spacing:-.02em;
+  line-height:1.05;
+  color:var(--porta-cor);
+  font-variant-numeric:tabular-nums;
+}
+.porta__un{
+  font-size:var(--fs-sm);
+  color:var(--text-muted);
+  margin-top:-4px;
+}
+.porta__texto{
+  font-size:var(--fs-sm);
+  line-height:1.55;
+  color:var(--text);
+  margin-top:var(--s2);
+}
+.porta__ir{
+  margin-top:auto;
+  padding-top:var(--s3);
+  font-size:var(--fs-sm);
+  font-weight:600;
+  color:var(--porta-cor);
+}
+.porta:hover .porta__ir{ text-decoration:underline; }
+
+.bifurcacao__nota{
+  margin:var(--s4) 0 0;
+  font-size:var(--fs-sm);
+  color:var(--text-muted);
+  line-height:1.6;
+  max-width:76ch;
+}
+
+/* metodologia */
+.metodo-formula{
+  margin:0 0 var(--s3);
+  padding:var(--s3) var(--s4);
+  background:var(--surface-sunken);
+  border-left:3px solid var(--sector);
+  border-radius:var(--radius-sm);
+  font-size:var(--fs-body);
+  line-height:1.6;
+}
+.selo-qualidade--aprox{ color:var(--txt-cultura); }
+
+@media (max-width:760px){
+  .bifurcacao__grade{ grid-template-columns:1fr; }
+  .porta{ padding:var(--s4); }
+}
+
+/* ============================================================
+   TRILHAS — a página inicial dividida pelas duas perguntas
+   A bifurcação deixa de ser um bloco e vira a estrutura: cada
+   pergunta abre uma trilha, com a cor da porta que leva a ela.
+   ============================================================ */
+
+.trilha{
+  margin:var(--s8) 0 var(--s5);
+  padding-top:var(--s5);
+  border-top:3px solid var(--trilha-cor, var(--navy-500));
+  scroll-margin-top:72px;   /* o menu é fixo; sem isso a âncora
+                               para debaixo dele */
+}
+.trilha--despesa{ --trilha-cor:var(--navy-500); }
+.trilha--custo{   --trilha-cor:var(--green-600); }
+
+.trilha__tag{
+  display:inline-block;
+  font-size:var(--fs-xs);
+  font-weight:700;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  color:var(--trilha-cor);
+  border:1px solid currentColor;
+  border-radius:999px;
+  padding:2px 10px;
+  margin-bottom:var(--s3);
+}
+.trilha__titulo{
+  margin:0;
+  font-family:var(--font-display);
+  font-size:var(--fs-display);
+  font-weight:700;
+  letter-spacing:-.02em;
+  line-height:1.1;
+  color:var(--text);
+}
+.trilha__linha{
+  margin:var(--s3) 0 0;
+  font-size:var(--fs-body);
+  line-height:1.6;
+  color:var(--text-muted);
+  max-width:72ch;
+}
+
+/* indicadores de custo, versão curta da página inicial */
+.custos-mini-grade{
+  list-style:none;
+  margin:0;
+  padding:var(--s5) var(--s5) var(--s3);
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(170px, 1fr));
+  gap:var(--s4);
+}
+.custo-mini{
+  padding-left:var(--s3);
+  border-left:3px solid var(--green-600);
+  min-width:0;
+}
+.custo-mini[data-qualidade="aproximado"]{ border-left-color:var(--gold-500); }
+.custo-mini__rot{
+  margin:0;
+  font-size:var(--fs-sm);
+  font-weight:600;
+  color:var(--text-muted);
+}
+.custo-mini__valor{
+  margin:2px 0 0;
+  font-family:var(--font-display);
+  font-size:var(--fs-h2);
+  font-weight:700;
+  letter-spacing:-.01em;
+  color:var(--green-600);
+  font-variant-numeric:tabular-nums;
+  line-height:1.1;
+}
+.custo-mini[data-qualidade="aproximado"] .custo-mini__valor{ color:var(--txt-cultura); }
+.custo-mini__un{
+  margin:2px 0 0;
+  font-size:var(--fs-xs);
+  color:var(--text-muted);
+}
+.custo-mini__nota{ padding:0 var(--s5) var(--s5) !important; margin:0 !important; max-width:80ch; }
+
+.lacunas-mini{
+  list-style:none;
+  margin:0;
+  padding:0 var(--s5) var(--s5);
+  display:grid;
+  gap:var(--s3);
+}
+.lacunas-mini li{
+  padding-left:var(--s4);
+  border-left:3px solid var(--line-strong);
+  font-size:var(--fs-body);
+  line-height:1.5;
+  color:var(--text);
+}
+
+@media (max-width:620px){
+  .trilha{ margin-top:var(--s7); }
+  .custos-mini-grade, .lacunas-mini{ padding-left:var(--s4); padding-right:var(--s4); }
+  .custo-mini__nota{ padding-left:var(--s4) !important; padding-right:var(--s4) !important; }
+}
+
+/* ============================================================
+   MODO CUSTO — o tom escuro
+   A aba de custo escurece o fundo da página. O cartão continua
+   branco, então ele passa a destacar mais (1,47:1 contra o
+   fundo, em vez de 1,15:1) e fica claro em qual aba se está.
+   O texto secundário escurece junto: o #5D6575 de sempre cai
+   para 3,98:1 neste fundo e reprovaria.
+   ============================================================ */
+
+body[data-modo="custo"]{
+  --bg:#CBD6E4;
+  --text-muted:#4D5564;
+  --line:#BCC4D1;
+  --line-strong:#A3AEC0;
+  --surface-sunken:#F1F4F9;
+}
+body[data-modo="custo"] .section-band{
+  background:var(--navy-800);
+  border-bottom-color:var(--navy-900);
+}
+body[data-modo="custo"] .section-band__title{ color:#fff; }
+body[data-modo="custo"] .section-band__desc,
+body[data-modo="custo"] .breadcrumb,
+body[data-modo="custo"] .breadcrumb a{ color:#C6D1E4; }
+body[data-modo="custo"] .breadcrumb a:hover{ color:#fff; }
+body[data-modo="custo"] .section-band__eyebrow{ background:var(--gold-500); }
+
+/* o botão de troca, no canto superior direito da faixa */
+.section-band__inner{ position:relative; }
+.troca-modo{
+  position:absolute;
+  top:var(--s5);
+  right:var(--s5);
+  appearance:none;
+  font:inherit;
+  font-size:var(--fs-sm);
+  font-weight:600;
+  padding:9px var(--s4);
+  min-height:40px;
+  border-radius:999px;
+  border:1px solid var(--sector-texto);
+  background:var(--surface);
+  color:var(--sector-texto);
+  cursor:pointer;
+  white-space:nowrap;
+  transition:background-color .15s var(--ease), color .15s var(--ease);
+}
+.troca-modo:hover{ background:var(--sector-texto); color:#fff; }
+.troca-modo:focus-visible{ outline:2px solid var(--azul-acao); outline-offset:2px; }
+body[data-modo="custo"] .troca-modo{
+  border-color:rgba(255,255,255,.55);
+  background:transparent;
+  color:#fff;
+}
+body[data-modo="custo"] .troca-modo:hover{ background:#fff; color:var(--navy-800); }
+
+/* composição do custo: barra + rótulo + valor */
+.composicao{
+  list-style:none;
+  margin:0;
+  padding:0 var(--s5) var(--s5);
+  display:grid;
+  gap:var(--s3);
+}
+.composicao li{
+  display:grid;
+  grid-template-columns:minmax(90px, 32%) 1fr auto;
+  align-items:center;
+  gap:var(--s4);
+}
+.comp__barra{
+  height:16px;
+  border-radius:var(--radius-sm);
+  background:var(--cor, var(--navy-500));
+  width:calc(var(--v, 0) * 1%);
+  min-width:3px;
+}
+.comp__rot{ font-size:var(--fs-sm); font-weight:500; color:var(--text); min-width:0; }
+.comp__val{
+  font-size:var(--fs-sm);
+  font-variant-numeric:tabular-nums;
+  color:var(--text-muted);
+  white-space:nowrap;
+}
+/* a barra ocupa a 1ª coluna e o rótulo a 2ª: a leitura vai do
+   tamanho para o nome, que é a ordem em que o olho entende */
+.composicao li > .comp__barra{ grid-column:1; }
+
+/* a área atual destacada no ranking de custo */
+.ranking-list__atual{ background:var(--sector-tint) !important; }
+.ranking-list__atual .mun{ font-weight:700; }
+
+@media (max-width:760px){
+  .troca-modo{ position:static; margin-top:var(--s4); display:inline-flex; align-items:center; }
+  .composicao li{ grid-template-columns:1fr; gap:var(--s1); }
+  .comp__barra{ width:calc(var(--v,0) * 1%); }
+}
+
+/* dois rankings lado a lado: o mesmo dado pelas duas perguntas */
+.dois-rankings{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:var(--s5);
+  padding:0 var(--s5) var(--s4);
+}
+.rank-sub{
+  display:flex;
+  align-items:center;
+  gap:var(--s2);
+  margin:0 0 var(--s3);
+  font-size:var(--fs-sm);
+  font-weight:600;
+  color:var(--text);
+}
+.rank-sub__tag{
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  border:1px solid currentColor;
+  border-radius:999px;
+  padding:2px 8px;
+  flex:none;
+}
+.rank-sub__tag--despesa{ color:var(--navy-500); }
+.rank-sub__tag--custo{   color:var(--green-600); }
+
+@media (max-width:860px){
+  .dois-rankings{ grid-template-columns:1fr; gap:var(--s5); }
+}
+
+/* as duas listas inteiras: rolam dentro do cartão, em vez de
+   esticar a página com 370 linhas */
+.ranking-list--rolagem{
+  max-height:440px;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+}
+.ranking-list--rolagem li[hidden]{ display:none; }
+
+.mun-filtro{ padding:0 var(--s5) var(--s4); }
+.mun-filtro input{
+  width:100%;
+  font:inherit;
+  font-size:var(--fs-body);
+  padding:10px var(--s4);
+  min-height:44px;
+  border:1px solid var(--line-strong);
+  border-radius:var(--radius);
+  background:var(--surface);
+  color:var(--text);
+}
+.mun-filtro input:focus{ outline:2px solid var(--azul-acao); outline-offset:1px; }
+.mun-filtro__saida{
+  margin:var(--s2) 0 0;
+  min-height:1.4em;
+  font-size:var(--fs-sm);
+  font-weight:500;
+  color:var(--sector-texto);
+  font-variant-numeric:tabular-nums;
+}
+
+@media (max-width:620px){
+  .mun-filtro{ padding-left:var(--s4); padding-right:var(--s4); }
+  .ranking-list--rolagem{ max-height:360px; }
+}
+
+.rank-sub__ver{ margin:var(--s3) 0 0; font-size:var(--fs-sm); }
+
+/* o sufixo do título diz em que aba se está, sem competir com
+   o nome da seção: mesmo tamanho, peso menor, cor recuada */
+.section-band__modo{
+  display:block;
+  margin-top:var(--s1);
+  font-size:var(--fs-h3);
+  font-weight:500;
+  letter-spacing:0;
+  color:var(--text-muted);
+}
+.section-band__modo::before{ content:"· "; }
+body[data-modo="custo"] .section-band__modo{ color:#AFBDD6; }
+
+@media (min-width:760px){
+  /* em tela larga cabe na mesma linha do nome */
+  .section-band__modo{ display:inline; margin-left:var(--s3); margin-top:0; }
+}
